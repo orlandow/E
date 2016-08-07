@@ -9,30 +9,26 @@ namespace E
 {
     class Program
     {
-        static string Exec(string proc, string args)
-        {
-            var info = new ProcessStartInfo
-            {
-                FileName = proc,
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                Arguments = args
-            };
+        static Process Exec(string proc, string args) => 
+            Process.Start(new ProcessStartInfo
+                {
+                    FileName = proc,
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    WindowStyle = ProcessWindowStyle.Maximized,
+                    Arguments = args
+                });
 
-            return Process.Start(info)
-                .StandardOutput.ReadToEnd()
-                .Trim();
-        }
-
-        static string Emacs(string args) => Exec("emacsclient", $"-n -a \"runemacs\" {args}");
+        static Process Emacs(string args) => Exec("emacsclient", $"-n -a \"runemacs -mm\" {args}");
 
         static void Focus()
         {
             const string focus = "(select-frame-set-input-focus (selected-frame))";
             const string maximize = "(set-frame-parameter nil 'fullscreen 'maximized)";
 
-            Emacs($"-e \"(progn {focus} {maximize})\"");
+            Emacs($"-e \"{focus}\"");
+            Emacs($"-e \"{maximize}\"");
         }
 
         static void Main(string[] args)
@@ -41,8 +37,16 @@ namespace E
                 ? string.Join(" ", args)
                 : "-c";
 
-            Emacs(arguments);
-            Focus();
+            if (Process.GetProcessesByName("emacs").Any())
+            {
+                if (args.Any())
+                    Emacs(arguments);
+                Focus();
+            }
+            else
+            {
+                Exec("runemacs", "-mm " + string.Join(" ", args));
+            }
         }
     }
 }
