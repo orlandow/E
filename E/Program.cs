@@ -9,27 +9,20 @@ namespace E
 {
     class Program
     {
-        static Process Exec(string proc, string args) => 
+        static Process Exec(string proc, string args) =>
             Process.Start(new ProcessStartInfo
-                {
-                    FileName = proc,
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    WindowStyle = ProcessWindowStyle.Maximized,
-                    Arguments = args
-                });
+            {
+                FileName = proc,
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                WindowStyle = ProcessWindowStyle.Maximized,
+                Arguments = args
+            });
 
-        static Process Emacs(string args) => Exec("emacsclient", $"-n -a \"runemacs -mm\" {args}");
-
-        static void Focus()
-        {
-            const string focus = "(select-frame-set-input-focus (selected-frame))";
-            const string maximize = "(set-frame-parameter nil 'fullscreen 'maximized)";
-
-            Emacs($"-e \"{focus}\"");
-            Emacs($"-e \"{maximize}\"");
-        }
+        static Process Emacs(string args) => Exec("emacsclient", $"-n -a \"runemacs\" -F \"((fullscreen . maximized))\" {args}");
+        static string Eval(string lisp) => Emacs($"-e \"{lisp}\"").StandardOutput.ReadToEnd();
+        static bool Running() => Process.GetProcessesByName("emacs").Any();
 
         static void Main(string[] args)
         {
@@ -37,11 +30,22 @@ namespace E
                 ? string.Join(" ", args)
                 : "-c";
 
-            if (Process.GetProcessesByName("emacs").Any())
+            if (Running())
             {
                 if (args.Any())
-                    Emacs(arguments);
-                Focus();
+                {
+                    Emacs(arguments).StandardOutput.ReadToEnd();
+                    Eval("(set-frame-parameter nil 'fullscreen 'maximized)");
+                }
+                else
+                {
+                    var frames = int.Parse(Eval("(length (visible-frame-list))"));
+
+                    if (frames > 0)
+                        Eval("(select-frame-set-input-focus (selected-frame))");
+                    else
+                        Emacs("-c");
+                }
             }
             else
             {
