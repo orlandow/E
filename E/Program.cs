@@ -20,7 +20,7 @@ namespace E
                 Arguments = args
             });
 
-        static Process Emacs(string args) => Exec("emacsclient", $"-n -a \"runemacs\" -F \"((fullscreen . maximized))\" {args}");
+        static Process Emacs(string args) => Exec("emacsclient", $"-n -a \"runemacs\" -F \"((fullscreen . maximized))\" \"{args}\"");
         static string Eval(string lisp) => Emacs($"-e \"{lisp}\"").StandardOutput.ReadToEnd();
         static bool Running() => Process.GetProcessesByName("emacs").Any();
 
