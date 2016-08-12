@@ -20,14 +20,14 @@ namespace E
                 Arguments = args
             });
 
-        static Process Emacs(string args) => Exec("emacsclient", $"-n -a \"runemacs\" -F \"((fullscreen . maximized))\" \"{args}\"");
-        static string Eval(string lisp) => Emacs($"-e \"{lisp}\"").StandardOutput.ReadToEnd();
+        static Process Emacs(string args) => Exec("emacsclient", $"-n -a \"runemacs\" -F \"((fullscreen . maximized))\" {args}");
+        static string Eval(string lisp) => Emacs($"-e \"{lisp}\"").StandardOutput.ReadToEnd().Trim();
         static bool Running() => Process.GetProcessesByName("emacs").Any();
 
         static void Main(string[] args)
         {
             var arguments = (args.Any())
-                ? string.Join(" ", args)
+                ? $"\"{string.Join(" ", args)}\""
                 : "-c";
 
             if (Running())
